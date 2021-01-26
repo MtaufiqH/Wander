@@ -1,11 +1,13 @@
 package id.taufiq.wander
 
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -17,6 +19,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var map: GoogleMap
     private val TAG = MapsActivity::class.java.simpleName
+
+    private val REQUEST_LOCATION_PERMISSION = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,12 +52,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val homeLatLang = LatLng(latitude, longitude)
         val androidOverlay = GroundOverlayOptions()
                 .image(BitmapDescriptorFactory.fromResource(R.drawable.android))
-                .position(homeLatLang,overlaySize)
+                .position(homeLatLang, overlaySize)
 
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLatLang, zoomLevel))
         map.addMarker(MarkerOptions().position(homeLatLang).title("my home"))
         map.addGroundOverlay(androidOverlay)
-
+        enableMyLocation()
         setMapLongClick(map)
         setPoiClick(map)
         setMapStyle(map)
@@ -86,15 +90,37 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun setMapStyle(map: GoogleMap){
+    private fun setMapStyle(map: GoogleMap) {
         try {
-            val success = map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,R.raw.map_style))
-            if (!success){
+            val success = map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style))
+            if (!success) {
                 Log.e(TAG, "setMapStyle: unsuccessful")
             }
 
-        } catch (e : Resources.NotFoundException){
+        } catch (e: Resources.NotFoundException) {
             Log.e(TAG, "can't find style, error")
+        }
+    }
+
+
+    private fun enableMyLocation() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            map.isMyLocationEnabled = true
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                    REQUEST_LOCATION_PERMISSION)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        // Check if location permissions are granted and if so enable the
+        // location data layer.
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                enableMyLocation()
+            }
         }
     }
 
