@@ -45,6 +45,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLatLang, zoomLevel))
         map.addMarker(MarkerOptions().position(homeLatLang).title("my home"))
         setMapLongClick(map)
+        setPoiClick(map)
 
     }
 
@@ -59,6 +60,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 title(getString(R.string.dropped_pin))
                 snippet(snippet)
             })
+        }
+    }
+
+
+    private fun setPoiClick(map: GoogleMap) {
+        map.setOnPoiClickListener { poi ->
+            val poiMarker = map.addMarker(MarkerOptions().position(poi.latLng).also {
+                title = poi.name
+            })
+
+            poiMarker.showInfoWindow()
         }
     }
 
